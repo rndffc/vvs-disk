@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgClass } from '@angular/common';
 import { AfterViewChecked, Component, ElementRef, EventEmitter, OnInit, Output, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { EstadoAtendimento } from '../../utils/enumUtils';
@@ -10,6 +10,7 @@ import { EstadoAtendimento } from '../../utils/enumUtils';
   imports: [
     FormsModule,
     CommonModule,
+    NgClass
   ],
   templateUrl: './mini-chat.component.html',
   styleUrl: './mini-chat.component.scss'
