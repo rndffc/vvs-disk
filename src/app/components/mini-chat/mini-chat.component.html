@@ -1,0 +1,302 @@
+<div *ngIf="isPopupVisible" class="minichat-overlay" (click)="fecharPopup()">
+    <!-- Interrompe o fechamento ao clicar no conteúdo interno -->
+    <div class="minichat-container" (click)="$event.stopPropagation()">
+      <!-- Alterna entre diferentes estados do atendimento usando ngSwitch -->
+      <div [ngSwitch]="estadoAtendimento">
+        <!-- Primeira tela: Iniciar Atendimento -->
+        <div *ngSwitchCase="EstadoAtendimento.Inicio">
+          <div
+            class="minichat-header"
+            [ngStyle]="{
+              'background-color': isAtendimentoIniciado ? '#fff' : '#FFA218'
+            }"
+          >
+            <!-- <img
+              src="assets/images/logo-c-plus-reduced.svg"
+              alt="VVS Sistemas"
+              class="logo"
+            /> -->
+            <p class="text-white">VVS SISTEMAS</p>
+          </div>
+  
+          <div class="container-inicial">
+            <p class="text-orange">Olá, podemos ajudar?</p>
+            <p class="text-chat">Fale com nossos agentes</p>
+            <button (click)="iniciarAtendimento()" class="btn-iniciar">
+              INICIAR ATENDIMENTO
+            </button>
+          </div>
+  
+          <div class="busca">
+            <div class="container-secundario">
+              <label>O que você está procurando?</label>
+              <div class="content-text">
+                <input type="text" placeholder="Busque sua resposta" />
+                <span class="material-symbols-outlined search">search</span>
+              </div>
+            </div>
+          </div>
+          <div class="rodape">
+            <p>Desenvolvido por VVS Sistemas</p>
+          </div>
+        </div>
+  
+        <div *ngSwitchCase="EstadoAtendimento.FluxoIniciado">
+          <div class="container-chat-header">
+            <div class="container-image">
+              <!-- <img
+                src="assets/images/logo-c-plus-reduced.svg"
+                alt="VVS Sistemas"
+                class="logo"
+              /> -->
+              <p class="text-white">VVS SISTEMAS</p>
+              <!-- <p *ngIf="!isChatSuporte">Você é o número 1 em nossa fila de atendimento.</p> -->
+            </div>
+            <div class="container-home">
+              <span class="material-symbols-outlined" (click)="isHomeChat()">
+                home
+              </span>
+            </div>
+          </div>
+  
+          <div class="chat-container">
+            <div *ngIf="subestadoAtendimento === EstadoAtendimento.ConfirmandoDados" class="container-generic">
+              <div class="message-container">
+                <span class="message-header">Mensagem automática</span>
+                <div class="message received">
+                  <span>Informe seus dados para o atendimento</span>
+                </div>
+                <div class="message-time">10:17</div>
+              </div>
+  
+              <form class="dados-form" (ngSubmit)="enviarDados()">
+                <div class="form-container">
+                  <label for="nome">Nome</label>
+                  <input
+                    id="nome"
+                    type="text"
+                    [(ngModel)]="nomeCliente"
+                    name="nomeCliente"
+                    placeholder="Ex: Vinicius Veras"
+                    required
+                  />
+  
+                  <label for="email">E-mail</label>
+                  <input
+                    id="email"
+                    type="email"
+                    [(ngModel)]="emailCliente"
+                    name="emailCliente"
+                    placeholder="Ex: vvssistemas@hotmail.com.br"
+                    required
+                  />
+  
+                  <label for="telefone">Telefone</label>
+                  <input
+                    id="telefone"
+                    type="text"
+                    [(ngModel)]="telefoneCliente"
+                    name="telefoneCliente"
+                    placeholder="Ex: 21 98244-2120"
+                    required
+                  />
+  
+                  <button type="submit" class="enviar-btn">ENVIAR</button>
+                </div>
+              </form>
+            </div>
+            <div  class="dados-form-dinamico" *ngIf="subestadoAtendimento === EstadoAtendimento.DadosConfirmados" >
+              <div class="message-container">
+                <span class="message-header">Mensagem automática</span>
+                <div class="message received">
+                  <span>Informe seus dados para o atendimento</span>
+                </div>
+                <div class="message-time">10:17</div>
+              </div>
+              <div class="message-client sent">Eu me chamo {{ nomeCliente }}</div>
+              <div class="message-client sent">
+                Telefone: {{ telefoneCliente }}
+              </div>
+              <div class="message-client sent">E-mail: {{ emailCliente }}</div>
+              <div class="message-container">
+                <span class="message-header">Mensagem automática</span>
+                <div class="message received">
+                  <span>Seus dados estão corretos?</span>
+                </div>
+                <div class="message-time">10:17</div>
+              </div>
+              <div class="respostas">
+                <button (click)="confirmarDados()" class="resposta-btn">
+                  SIM, ESTÃO CERTOS
+                </button>
+                <button (click)="queroCorrigirDados()" class="resposta-btn">
+                  NÃO, QUERO CORRIGIR
+                </button>
+              </div>
+            </div>
+            <div *ngIf="subestadoAtendimento === EstadoAtendimento.DadosCorretos" class="container-generic">
+              <div class="message-container">
+                <span class="message-header">Mensagem automática</span>
+                <div class="message received">
+                  <span
+                    >Você já abriu um ticket ou protocolo com esta
+                    solicitação?</span
+                  >
+                </div>
+                <div class="message-time">10:17</div>
+              </div>
+              <div
+                class="respostas"
+                *ngIf="!isTicketNaoAberto && !isTicketAberto"
+              >
+                <button (click)="ticketJaAberto()" class="resposta-btn">
+                  SIM, JÁ ABRI
+                </button>
+                <button (click)="ticketNaoAberto()" class="resposta-btn">
+                  NÃO
+                </button>
+              </div>
+            </div>
+            <div *ngIf="subestadoAtendimento === EstadoAtendimento.JaAbriuTicket" class="container-generic">
+              <div class="dados-form-dinamico">
+                <div class="message-container">
+                  <span class="message-header">Mensagem automática</span>
+                  <div class="message received">
+                    <span
+                      >Você já abriu um ticket ou protocolo com esta
+                      solicitação?</span
+                    >
+                  </div>
+                  <div class="message-time">10:17</div>
+                </div>
+                <div class="message-client sent">Sim, já abri</div>
+              </div>
+              <div class="form-ticket-container" *ngIf="!isDesistir">
+                <div class="ticket-container">
+                  <label for="textAbriu"
+                    >Qual é o número do ticket ou protocolo?</label
+                  >
+                  <input
+                    id="textAbriu"
+                    type="text"
+                    name="telefoneCliente"
+                    placeholder="Ex: 62102"
+                    required
+                  />
+  
+                  <div class="respostas-ticket">
+                    <button
+                      (click)="ticketDesistiu()"
+                      class="resposta-btn-ticket"
+                    >
+                      DESISTIR
+                    </button>
+                    <button (click)="onInitChat()" class="resposta-btn-ticket">
+                      CONFIRMAR
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div
+              *ngIf="subestadoAtendimento === EstadoAtendimento.TicketNaoAberto" class="container-generic"
+            >
+              <div class="message-container">
+                <span class="message-header">Mensagem automática</span>
+                <div class="message received">
+                  <span>Sobre o que você precisa de ajuda?</span>
+                </div>
+                <div class="message-time">10:17</div>
+              </div>
+              <div class="form-ticket-container">
+                <div class="ticket-container">
+                  <label for="selectAssunto">Selecione o assunto</label>
+                  <select
+                    id="selectAssunto"
+                    [(ngModel)]="assuntoSelecionado"
+                    name="selectAssunto"
+                    class="styled-select"
+                    required
+                  >
+                    <option value="" disabled selected>Escolha um assunto</option>
+                    <option
+                      *ngFor="let item of selectAssunto"
+                      [value]="item.texto"
+                    >
+                      {{ item.texto }}
+                    </option>
+                  </select>
+                  <div class="respostas-ticket">
+                    <button (click)="onInitChat()" class="resposta-btn-ticket">
+                      CONFIRMAR
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="subestadoAtendimento === EstadoAtendimento.Desistir" class="container-generic">
+              <div class="message-container">
+                <span class="message-header">Mensagem automática</span>
+                <div class="message received">
+                  <span>Sobre o que você precisa de ajuda?</span>
+                </div>
+                <div class="message-time">10:17</div>
+              </div>
+  
+              <div class="form-ticket-container">
+                <div class="ticket-container">
+                  <label for="selectAssunto">Selecione o assunto</label>
+                  <select
+                    id="selectAssunto"
+                    [(ngModel)]="assuntoSelecionado"
+                    name="selectAssunto"
+                    class="styled-select"
+                    required
+                  >
+                    <option value="" disabled selected>Escolha um assunto</option>
+                    <option
+                      *ngFor="let item of selectAssunto"
+                      [value]="item.texto"
+                    >
+                      {{ item.texto }}
+                    </option>
+                  </select>
+                  <div class="respostas-ticket">
+                    <button (click)="onInitChat()" class="resposta-btn-ticket">
+                      CONFIRMAR
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+  
+            <div *ngIf="subestadoAtendimento === EstadoAtendimento.ChatSuporte">
+           
+  
+              <div class="chat-body-mini-chat" #chatBody (scroll)="onScroll()">
+                <div class="message-container-mini-chat" *ngFor="let msg of mensagens">
+                  <div class="message-header-mini-chat" *ngIf="msg.tipo === 'automatica'">Mensagem automática</div>
+                  <div class="message-client-mini-chat" [ngClass]="{'sent-mini-chat': msg.tipo === 'usuario', 'received-mini-chat': msg.tipo === 'suporte'}">
+                    <p>{{msg.texto}}</p>
+                  </div>
+                  <div class="message-time-mini-chat">{{msg.hora}}</div>
+                </div>
+              </div>
+  
+              <!-- Campo de entrada de mensagem -->
+              <div class="chat-footer-mini-chat">
+                <input
+                  [(ngModel)]="mensagemAtual"
+                  type="text"
+                  placeholder="Escreva uma mensagem"
+                  (keydown.enter)="enviarMensagem()"
+                />
+                <button (click)="enviarMensagem()">Enviar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
