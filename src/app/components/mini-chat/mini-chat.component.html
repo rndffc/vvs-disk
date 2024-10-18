@@ -11,13 +11,14 @@
               'background-color': isAtendimentoIniciado ? '#fff' : '#FFA218'
             }"
           >
-            <!-- <img
+            <img
               src="assets/images/logo-c-plus-reduced.svg"
               alt="VVS Sistemas"
               class="logo"
-            /> -->
+            />
             <p class="text-white">VVS SISTEMAS</p>
           </div>
+
   
           <div class="container-inicial">
             <p class="text-orange">Olá, podemos ajudar?</p>
@@ -32,7 +33,7 @@
               <label>O que você está procurando?</label>
               <div class="content-text">
                 <input type="text" placeholder="Busque sua resposta" />
-                <span class="material-symbols-outlined search">search</span>
+                <span class="material-icons search">search</span>
               </div>
             </div>
           </div>
@@ -44,16 +45,16 @@
         <div *ngSwitchCase="EstadoAtendimento.FluxoIniciado">
           <div class="container-chat-header">
             <div class="container-image">
-              <!-- <img
+              <img
                 src="assets/images/logo-c-plus-reduced.svg"
                 alt="VVS Sistemas"
                 class="logo"
-              /> -->
+              />
               <p class="text-white">VVS SISTEMAS</p>
               <!-- <p *ngIf="!isChatSuporte">Você é o número 1 em nossa fila de atendimento.</p> -->
             </div>
             <div class="container-home">
-              <span class="material-symbols-outlined" (click)="isHomeChat()">
+              <span class="material-icons" (click)="isHomeChat()">
                 home
               </span>
             </div>
