@@ -1,10 +1,10 @@
-<div *ngIf="isPopupVisible" class="minichat-overlay" (click)="fecharPopup()">
+<div class="minichat-overlay">
     <!-- Interrompe o fechamento ao clicar no conteúdo interno -->
     <div class="minichat-container" (click)="$event.stopPropagation()">
       <!-- Alterna entre diferentes estados do atendimento usando ngSwitch -->
       <div [ngSwitch]="estadoAtendimento">
         <!-- Primeira tela: Iniciar Atendimento -->
-        <div *ngSwitchCase="EstadoAtendimento.Inicio">
+        <div *ngSwitchCase="atendimento.Inicio">
           <div
             class="minichat-header"
             [ngStyle]="{
@@ -16,16 +16,31 @@
               alt="VVS Sistemas"
               class="logo"
             />
-            <p class="text-white">VVS SISTEMAS</p>
+            <p class="text-white">VVS Sistemas</p>
           </div>
 
   
           <div class="container-inicial">
-            <p class="text-orange">Olá, podemos ajudar?</p>
-            <p class="text-chat">Fale com nossos agentes</p>
-            <button (click)="iniciarAtendimento()" class="btn-iniciar">
-              INICIAR ATENDIMENTO
-            </button>
+            <!-- Se os dados do cliente estiverem confirmados, exibe o nome e opção de trocar de usuário -->
+            <div class="container-logado" *ngIf="dadosConfirmados; else semSessao">
+              <p class="text-orange">Olá, {{ nomeCliente }}</p>
+              <p class="text-chat">Como podemos ajudar?</p>
+              <button (click)="usuarioJaLogadoInicio()" class="btn-iniciar-logado">
+                INICIAR ATENDIMENTO
+              </button>
+              <p (click)="entrarComOutroUsuario()" class="text-orange-usuario">
+                Entrar com outro usuário
+              </p>
+            </div>
+          
+            <!-- Caso não tenha uma sessão ativa, exibe o formulário padrão de boas-vindas -->
+            <ng-template #semSessao>
+              <p class="text-orange">Olá, podemos ajudar?</p>
+              <p class="text-chat">Fale com nossos agentes</p>
+              <button (click)="iniciarAtendimento()" class="btn-iniciar">
+                INICIAR ATENDIMENTO
+              </button>
+            </ng-template>
           </div>
   
           <div class="busca">
@@ -42,7 +57,7 @@
           </div>
         </div>
   
-        <div *ngSwitchCase="EstadoAtendimento.FluxoIniciado">
+        <div *ngSwitchCase="atendimento.FluxoIniciado">
           <div class="container-chat-header">
             <div class="container-image">
               <img
@@ -61,7 +76,7 @@
           </div>
   
           <div class="chat-container">
-            <div *ngIf="subestadoAtendimento === EstadoAtendimento.ConfirmandoDados" class="container-generic">
+            <div *ngIf="subestadoAtendimento === atendimento.ConfirmandoDados" class="container-generic">
               <div class="message-container">
                 <span class="message-header">Mensagem automática</span>
                 <div class="message received">
@@ -89,7 +104,7 @@
                     [(ngModel)]="emailCliente"
                     name="emailCliente"
                     placeholder="Ex: vvssistemas@hotmail.com.br"
-                    required
+                    required=""
                   />
   
                   <label for="telefone">Telefone</label>
@@ -106,7 +121,7 @@
                 </div>
               </form>
             </div>
-            <div  class="dados-form-dinamico" *ngIf="subestadoAtendimento === EstadoAtendimento.DadosConfirmados" >
+            <div  class="dados-form-dinamico" *ngIf="subestadoAtendimento === atendimento.DadosConfirmados" >
               <div class="message-container">
                 <span class="message-header">Mensagem automática</span>
                 <div class="message received">
@@ -135,7 +150,7 @@
                 </button>
               </div>
             </div>
-            <div *ngIf="subestadoAtendimento === EstadoAtendimento.DadosCorretos" class="container-generic">
+            <div *ngIf="subestadoAtendimento === atendimento.DadosCorretos" class="container-generic">
               <div class="message-container">
                 <span class="message-header">Mensagem automática</span>
                 <div class="message received">
@@ -158,7 +173,7 @@
                 </button>
               </div>
             </div>
-            <div *ngIf="subestadoAtendimento === EstadoAtendimento.JaAbriuTicket" class="container-generic">
+            <div *ngIf="subestadoAtendimento === atendimento.JaAbriuTicket" class="container-generic">
               <div class="dados-form-dinamico">
                 <div class="message-container">
                   <span class="message-header">Mensagem automática</span>
@@ -200,7 +215,7 @@
               </div>
             </div>
             <div
-              *ngIf="subestadoAtendimento === EstadoAtendimento.TicketNaoAberto" class="container-generic"
+              *ngIf="subestadoAtendimento === atendimento.TicketNaoAberto" class="container-generic"
             >
               <div class="message-container">
                 <span class="message-header">Mensagem automática</span>
@@ -235,7 +250,7 @@
                 </div>
               </div>
             </div>
-            <div *ngIf="subestadoAtendimento === EstadoAtendimento.Desistir" class="container-generic">
+            <div *ngIf="subestadoAtendimento === atendimento.Desistir" class="container-generic">
               <div class="message-container">
                 <span class="message-header">Mensagem automática</span>
                 <div class="message received">
@@ -271,7 +286,7 @@
               </div>
             </div>
   
-            <div *ngIf="subestadoAtendimento === EstadoAtendimento.ChatSuporte">
+            <div *ngIf="subestadoAtendimento === atendimento.ChatSuporte">
            
   
               <div class="chat-body-mini-chat" #chatBody (scroll)="onScroll()">

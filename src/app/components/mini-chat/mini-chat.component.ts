@@ -1,5 +1,5 @@
 import { CommonModule, NgClass } from '@angular/common';
-import { AfterViewChecked, Component, ElementRef, EventEmitter, OnInit, Output, ViewChild } from '@angular/core';
+import { AfterViewChecked, ChangeDetectorRef, Component, ElementRef, EventEmitter, NgZone, OnInit, Output, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { EstadoAtendimento } from '../../utils/enumUtils';
 
@@ -20,7 +20,7 @@ export class MiniChatComponent implements OnInit, AfterViewChecked{
   @Output() chatClosed = new EventEmitter<void>();
 
 
-  constructor( ) { 
+  constructor(private cdRef: ChangeDetectorRef,private zone: NgZone ) { 
     this.mensagens.push({
       tipo: 'suporte',
       texto: 'Por favor aguarde. Em breve um de nossos agentes irá lhe atender.',
@@ -29,38 +29,29 @@ export class MiniChatComponent implements OnInit, AfterViewChecked{
   };
 
   ngOnInit(): void {
-      this.isPopupVisible = true;
-  }
+    const sessaoSalva = localStorage.getItem('sessaoCliente');
 
-
-  EstadoAtendimento = EstadoAtendimento; 
- 
-  estadoAtendimento: string = EstadoAtendimento.Inicio;
-  subestadoAtendimento: string = '';
-  iniciarAtendimento() {
-    this.estadoAtendimento = EstadoAtendimento.FluxoIniciado;
-    this.subestadoAtendimento = EstadoAtendimento.ConfirmandoDados;
-  }
+    if (sessaoSalva) {
+      const dadosCliente = JSON.parse(sessaoSalva);
+      const agora = new Date().getTime();
   
-  
- enviarDados() {
-    if (this.nomeCliente && this.emailCliente && this.telefoneCliente) {
-      // Após enviar os dados, exibe a parte de confirmação
-      this.subestadoAtendimento = EstadoAtendimento.DadosConfirmados;
+      if (agora < dadosCliente.expiracao) {
+        // A sessão ainda é válida
+        this.nomeCliente = dadosCliente.nome;
+        this.emailCliente = dadosCliente.email;
+        this.telefoneCliente = dadosCliente.telefone;
+        this.dadosConfirmados = true; // Defina isso para exibir os dados confirmados no UI
+      } else {
+        // Sessão expirou
+        localStorage.removeItem('sessaoCliente');
+      }
     }
   }
-  queroCorrigirDados() {
-    this.subestadoAtendimento = EstadoAtendimento.ConfirmandoDados;
-  }
-  confirmarDados() {
-    this.subestadoAtendimento = EstadoAtendimento.DadosCorretos;
-  }
-  
-  abrirChatSuporte() {
-    this.estadoAtendimento = EstadoAtendimento.ChatSuporte;
-  }
 
 
+  atendimento = EstadoAtendimento; 
+  estadoAtendimento: string = EstadoAtendimento.Inicio;
+  subestadoAtendimento: string = '';
 
   nomeCliente: string = '';
   emailCliente: string = '';
@@ -77,61 +68,88 @@ export class MiniChatComponent implements OnInit, AfterViewChecked{
   assuntoSelecionado: string = '';
   mostrarRespostas = false;
   dadosConfirmados: boolean = false;
-  isPopupVisible: boolean = false;
+
   isAtendimentoIniciado: boolean = false;
   isLoading = false; // Variável de controle do carregamento
   isDadosCorretos = false;
-  ticketConfirmado: boolean = false;
-  isNaoAbriuTicket: boolean = false;
-  isChatSuporte: boolean = false;
 
+
+
+  @ViewChild('chatBody') chatBody!: ElementRef;
+  isNearBottom = true; // Variável para controlar se está perto do final do chat
+  novasMensagens = false; // Indica se novas mensagens foram adicionadas
   mensagemAtual: string = '';
+
+
   mensagens = [
     { tipo: 'suporte', texto: 'Olá! Como posso te ajudar?', hora: '10:00' },
     { tipo: 'usuario', texto: 'Preciso de ajuda com meu sistema.', hora: '10:01' }
-    // Outras mensagens...
   ];
   isTicketNaoAberto: boolean = false;
-
-
   isTicketAberto: boolean = false;
   isDesistir: boolean = false;
-  conversas = [
-    { tipo: 'received', texto: 'Informe seus dados para o atendimento' },
-    { tipo: 'sent', texto: `Eu me chamo ${this.nomeCliente}` },
-    { tipo: 'sent', texto: `Telefone: ${this.telefoneCliente}` },
-    { tipo: 'sent', texto: `E-mail: ${this.emailCliente}` },
-    { tipo: 'received', texto: 'Seus dados estão certos?' }
-  ];
 
 
-
-
-  // iniciarAtendimento() {
-  //   this.isLoading = true; 
-  //   setTimeout(() => {
-  //     this.isLoading = false; // Esconde o spinner
-  //     this.isAtendimentoIniciado = true; // Exibe a segunda tela
-  //   }, 2000); // Simulação de 2 segundos
-  // }
-
-  // confirmarDados() {
-  //   // Ao confirmar os dados, exibe a próxima "telinha"
-  //   this.ticketConfirmado = true;
-  // }
-
-
-
-  togglePopup() {
-    this.isPopupVisible = !this.isPopupVisible;
-    console.log(this.isPopupVisible)
+  iniciarAtendimento() {
+    this.estadoAtendimento = EstadoAtendimento.FluxoIniciado;
+    this.subestadoAtendimento = EstadoAtendimento.ConfirmandoDados;
+    this.cdRef.detectChanges();
+  }
+  
+  usuarioJaLogadoInicio(){
+    this.estadoAtendimento = EstadoAtendimento.FluxoIniciado;
+    this.subestadoAtendimento = EstadoAtendimento.DadosCorretos;
+  }
+  
+ enviarDados() {
+  
+    if (this.nomeCliente && this.emailCliente && this.telefoneCliente) {
+      // Após enviar os dados, exibe a parte de confirmação
+      this.subestadoAtendimento = EstadoAtendimento.DadosConfirmados;
+      this.cdRef.detectChanges();
+    }
+  }
+  queroCorrigirDados() {
+    this.subestadoAtendimento = EstadoAtendimento.ConfirmandoDados;
+  }
+  confirmarDados() {
+    const agora = new Date().getTime();
+    const dataExpiracao = agora + 24 * 60 * 60 * 1000; // 24 horas em milissegundos
+  
+    const dadosCliente = {
+      nome: this.nomeCliente,
+      email: this.emailCliente,
+      telefone: this.telefoneCliente,
+      expiracao: dataExpiracao
+    };
+    this.dadosConfirmados = true;
+    localStorage.setItem('sessaoCliente', JSON.stringify(dadosCliente));
+    this.cdRef.detectChanges();
+    this.subestadoAtendimento = EstadoAtendimento.DadosCorretos;
   }
 
-
-  fecharPopup() {
-    this.isPopupVisible = false;
-    this.chatClosed.emit(); // Emite um evento quando o chat é fechado
+  entrarComOutroUsuario() {
+    localStorage.removeItem('sessaoCliente');
+    this.nomeCliente = '';
+    this.emailCliente = '';
+    this.telefoneCliente = '';
+    this.dadosConfirmados = false; // Redefine para a tela inicial
+    this.subestadoAtendimento = EstadoAtendimento.ConfirmandoDados;
   }
+
+  abrirChatSuporte() {
+    this.estadoAtendimento = EstadoAtendimento.ChatSuporte;
+  }
+
+logout() {
+  localStorage.removeItem('sessaoCliente');
+  this.nomeCliente = '';
+  this.emailCliente = '';
+  this.telefoneCliente = '';
+  this.dadosConfirmados = false;
+  this.subestadoAtendimento = EstadoAtendimento.Inicio;
+  this.cdRef.detectChanges();
+}
 
   ticketJaAberto() {
     this.subestadoAtendimento = EstadoAtendimento.JaAbriuTicket;
@@ -149,16 +167,15 @@ export class MiniChatComponent implements OnInit, AfterViewChecked{
     console.log("Desistiu? ", this.isDesistir);
   }
 
-  isHomeChat(){
-    this.estadoAtendimento = EstadoAtendimento.Inicio;
+  isHomeChat() {
+    this.zone.run(() => {
+      this.estadoAtendimento = EstadoAtendimento.Inicio;
+      this.isDesistir = false;
+    });
   }
   onInitChat(){
     this.subestadoAtendimento = EstadoAtendimento.ChatSuporte;
   }
-
-
-
-
 
 
  // Este método é chamado após cada ciclo de mudança na visualização
@@ -168,11 +185,6 @@ export class MiniChatComponent implements OnInit, AfterViewChecked{
     this.novasMensagens = false; // Reseta a flag após o scroll
   }
 }
-
-
-@ViewChild('chatBody') chatBody!: ElementRef;
-isNearBottom = true; // Variável para controlar se está perto do final do chat
-novasMensagens = false; // Indica se novas mensagens foram adicionadas
 
 
 
