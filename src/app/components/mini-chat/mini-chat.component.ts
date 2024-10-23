@@ -1,6 +1,6 @@
 import { CommonModule, NgClass } from '@angular/common';
 import { AfterViewChecked, ChangeDetectorRef, Component, ElementRef, EventEmitter, NgZone, OnInit, Output, ViewChild } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 import { EstadoAtendimento } from '../../utils/enumUtils';
 
 
@@ -29,8 +29,9 @@ export class MiniChatComponent implements OnInit, AfterViewChecked{
   };
 
   ngOnInit(): void {
+    this.estadoAtendimento = EstadoAtendimento.FluxoIniciado;
+    this.subestadoAtendimento = EstadoAtendimento.Avaliacao;
     const sessaoSalva = localStorage.getItem('sessaoCliente');
-
     if (sessaoSalva) {
       const dadosCliente = JSON.parse(sessaoSalva);
       const agora = new Date().getTime();
@@ -101,14 +102,17 @@ export class MiniChatComponent implements OnInit, AfterViewChecked{
     this.subestadoAtendimento = EstadoAtendimento.DadosCorretos;
   }
   
- enviarDados() {
-  
-    if (this.nomeCliente && this.emailCliente && this.telefoneCliente) {
+  enviarDados(dadosForm: NgForm) {
+    if (dadosForm.valid) {
       // Após enviar os dados, exibe a parte de confirmação
       this.subestadoAtendimento = EstadoAtendimento.DadosConfirmados;
       this.cdRef.detectChanges();
+    } else {
+      console.log('Campos não preenchidos corretamente');
+      dadosForm.form.markAllAsTouched();
     }
   }
+
   queroCorrigirDados() {
     this.subestadoAtendimento = EstadoAtendimento.ConfirmandoDados;
   }
@@ -136,9 +140,10 @@ export class MiniChatComponent implements OnInit, AfterViewChecked{
     this.dadosConfirmados = false; // Redefine para a tela inicial
     this.subestadoAtendimento = EstadoAtendimento.ConfirmandoDados;
   }
-
+  isChatAberto: boolean = false;
   abrirChatSuporte() {
     this.estadoAtendimento = EstadoAtendimento.ChatSuporte;
+    this.isChatAberto = true;
   }
 
 logout() {
@@ -171,10 +176,12 @@ logout() {
     this.zone.run(() => {
       this.estadoAtendimento = EstadoAtendimento.Inicio;
       this.isDesistir = false;
+      this.isChatAberto = false;
     });
   }
   onInitChat(){
     this.subestadoAtendimento = EstadoAtendimento.ChatSuporte;
+    this.isChatAberto = true;
   }
 
 
@@ -234,5 +241,24 @@ enviarMensagem() {
   getHoraAtual(): string {
     const agora = new Date();
     return `${agora.getHours()}:${agora.getMinutes().toString().padStart(2, '0')}`;
+  }
+
+
+
+  notas: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+  getColor(nota: number): string {
+    if (nota <= 4) {
+      return 'vermelho';  // Classe CSS definida no seu arquivo de estilos
+    } else if (nota <= 7) {
+      return 'amarelo';  // Outra classe
+    } else {
+      return 'verde';  // Classe para notas altas
+    }
+  }
+  
+  avaliar(nota: number) {
+    console.log(`Nota selecionada: ${nota}`);
+    // Aqui você pode implementar o que acontece quando a nota é clicada
   }
 };

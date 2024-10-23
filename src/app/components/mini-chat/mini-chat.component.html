@@ -65,15 +65,20 @@
                 alt="VVS Sistemas"
                 class="logo"
               />
-              <p class="text-white">VVS SISTEMAS</p>
-              <!-- <p *ngIf="!isChatSuporte">Você é o número 1 em nossa fila de atendimento.</p> -->
+              <div class="info-container">
+                <p class="text-white">VVS SISTEMAS</p>
+                @if(isChatAberto === true){
+                  <p class="text-white numero-fila">
+                    Você é o número 1 em nossa fila de atendimento.
+                  </p>
+                }
+              </div>
             </div>
             <div class="container-home">
-              <span class="material-icons" (click)="isHomeChat()">
-                home
-              </span>
+              <span class="material-icons" (click)="isHomeChat()">home</span>
             </div>
           </div>
+          
   
           <div class="chat-container">
             <div *ngIf="subestadoAtendimento === atendimento.ConfirmandoDados" class="container-generic">
@@ -85,7 +90,7 @@
                 <div class="message-time">10:17</div>
               </div>
   
-              <form class="dados-form" (ngSubmit)="enviarDados()">
+              <form #dadosForm="ngForm" class="dados-form" (ngSubmit)="enviarDados(dadosForm)">
                 <div class="form-container">
                   <label for="nome">Nome</label>
                   <input
@@ -95,8 +100,10 @@
                     name="nomeCliente"
                     placeholder="Ex: Vinicius Veras"
                     required
+                    #nomeClienteInput="ngModel"
+                    [ngClass]="{'erro-borda': nomeClienteInput.invalid && dadosForm.submitted}"
                   />
-  
+              
                   <label for="email">E-mail</label>
                   <input
                     id="email"
@@ -104,9 +111,11 @@
                     [(ngModel)]="emailCliente"
                     name="emailCliente"
                     placeholder="Ex: vvssistemas@hotmail.com.br"
-                    required=""
+                    required
+                    #emailClienteInput="ngModel"
+                    [ngClass]="{'erro-borda': emailClienteInput.invalid && dadosForm.submitted}"
                   />
-  
+              
                   <label for="telefone">Telefone</label>
                   <input
                     id="telefone"
@@ -115,11 +124,15 @@
                     name="telefoneCliente"
                     placeholder="Ex: 21 98244-2120"
                     required
+                    #telefoneClienteInput="ngModel"
+                    [ngClass]="{'erro-borda': telefoneClienteInput.invalid && dadosForm.submitted}"
                   />
-  
+              
                   <button type="submit" class="enviar-btn">ENVIAR</button>
                 </div>
               </form>
+              
+
             </div>
             <div  class="dados-form-dinamico" *ngIf="subestadoAtendimento === atendimento.DadosConfirmados" >
               <div class="message-container">
@@ -310,6 +323,22 @@
                 <button (click)="enviarMensagem()">Enviar</button>
               </div>
             </div>
+
+            <div *ngIf="subestadoAtendimento === atendimento.Avaliacao">
+              <p class="titulo-avaliacao">Qual sua avaliação para esse atendimento?</p>
+              <div class="avaliacao-botoes">
+                <button class="botao-avaliacao" *ngFor="let nota of notas" [ngClass]="getColor(nota)" (click)="avaliar(nota)">
+                  {{ nota }}
+                </button>
+              </div>
+              <textarea class="comentario-avaliacao" placeholder="Deixe seu comentário..."></textarea>
+              <div class="navegacao">
+                <span class="page-indicator">1/1</span>
+                <span class="arrow">→</span>
+              </div>
+              <button class="enviar-avaliacao">ENVIAR</button>
+            </div>    
+
           </div>
         </div>
       </div>
